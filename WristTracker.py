@@ -15,8 +15,7 @@ def process_hand_landmarks(image):
             for hand_landmarks in results.multi_hand_landmarks:
                 # Draw the landmarks on the image
                 mp_drawing.draw_landmarks(image, hand_landmarks, mp_hands.HAND_CONNECTIONS,
-                mp_drawing.DrawingSpec(color=(128,0,128), thickness=3, circle_radius=3),
-                mp_drawing.DrawingSpec(color=(255,192,203), thickness=2))
+                mp_drawing.DrawingSpec(color=(128,0,128), thickness=3, circle_radius=3))
 
 
 cap = cv2.VideoCapture(0)  # Change the argument to the appropriate camera index
