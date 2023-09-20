@@ -23,9 +23,13 @@ while True:
     ret, frame = cap.read()
     if not ret:
         break
-    process_hand_landmarks(frame)
-    cv2.imshow('Wrist Tracker', frame)
+    gray_flip = cv2.flip(frame,1)
+    process_hand_landmarks(gray_flip)
+    cv2.imshow('Wrist Tracker', gray_flip)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
+    if cv2.getWindowProperty("Wrist Tracker", cv2.WND_PROP_VISIBLE) < 1:
+        break
+
 cap.release()
 cv2.destroyAllWindows()
