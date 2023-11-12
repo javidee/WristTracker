@@ -27,15 +27,18 @@ vol_bar= 0
 first_iteration = True
 vol = 0
 vol_p = 0
-vol_lock = threading.Lock()
+lock = threading.Lock()
 time_condition_met = None
+length_2 = 45
+
+
 
 def volume_save():
     global vol
     global vol_p
     while True:
         time.sleep(2)
-        with vol_lock:
+        with lock:
             vol_p = vol
               
     
@@ -45,13 +48,22 @@ def volume_changing(img, lmList):
     global vol
     global vol_p
     global time_condition_met
+    global length_2
     if len(lmList) != 0  :
         
         #print(lmList[4],lmList[8])
         x1, y1 = lmList[4][1] , lmList[4][2]
         x2, y2 = lmList[8][1] , lmList[8][2]
+        x3, y3 = lmList[5][1] , lmList[5][2]
+        x4, y4 = lmList[9][1] , lmList[9][2]
+        length_p = math.hypot(x4-x3,y4-y3)
         cx,cy = (x1+x2)//2, (y1+y2)//2
-        length =math.hypot(x2-x1,y2-y1)
+        if length_2 > length_p:
+            k = length_p/length_2
+        else :
+            k = length_2/length_p
+        #print(k)
+        length = math.hypot(x2-x1,y2-y1)/k
         if length < 50 and first_iteration:
             cv2.circle(img, (x1,y1), 10, (255,0,255), cv2.FILLED )
             cv2.circle(img, (x2,y2), 10, (255,0,255), cv2.FILLED )
@@ -80,7 +92,7 @@ def volume_changing(img, lmList):
             x1, y1 = lmList[4][1] , lmList[4][2]
             x2, y2 = lmList[8][1] , lmList[8][2]
             cx,cy = (x1+x2)//2, (y1+y2)//2
-            length =math.hypot(x2-x1,y2-y1)
+            length =math.hypot(x2-x1,y2-y1)/k
             #print(length)
             cv2.circle(img, (x1,y1), 10, (255,0,255), cv2.FILLED )
             cv2.circle(img, (x2,y2), 10, (255,0,255), cv2.FILLED )
@@ -114,11 +126,8 @@ def volume_changing(img, lmList):
             return vol
         
            
-            
 
-
-
-     
+  
 volume_save_thread = threading.Thread(target=volume_save, daemon=True)
 volume_save_thread.start()      
     
