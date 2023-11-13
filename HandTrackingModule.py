@@ -44,8 +44,7 @@ class handDetector():
                 lmList.append([id, cx, cy])
                 
 
-        return lmList
-                     
+        return lmList           
                      #print(0,".", cx, cy , cz) 
                      #if id == 0:
                          #cv2.circle(img, (cx, cy), 15, (255,0,255), cv2.FILLED )

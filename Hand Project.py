@@ -78,6 +78,7 @@ def volume_changing(img, lmList):
             vol_bar = np.interp(length,[50,300],[475,155])
             #print(int(length),vol)
             volume.SetMasterVolumeLevel(vol, None)
+            cv2.rectangle(img, (0,150), (40, 480), (250, 250, 250), 5 )
             cv2.rectangle(img, (5,int(vol_bar)), (35,475), (250, 0, 250), cv2.FILLED )
             if vol==-65:
                 cv2.circle(img, (cx,cy), 5, (0,255,0), cv2.FILLED )
@@ -107,6 +108,7 @@ def volume_changing(img, lmList):
             vol_bar = np.interp(length,[50,300],[475,155])
             #print(int(length),vol)
             volume.SetMasterVolumeLevel(vol, None)
+            cv2.rectangle(img, (0,150), (40, 480), (250, 250, 250), 5 )
             cv2.rectangle(img, (5,int(vol_bar)), (35,475), (250, 0, 250), cv2.FILLED )
             if vol==-65:
                 cv2.circle(img, (cx,cy), 5, (0,255,0), cv2.FILLED )
@@ -139,11 +141,6 @@ while True:
     
     volume_c=volume_changing(img, lmList)
     #print(vol_p)
-  
-    
-    cv2.rectangle(img, (0,150), (40, 480), (250, 250, 250), 5 )
-
-
     cv2.imshow("img", img)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
