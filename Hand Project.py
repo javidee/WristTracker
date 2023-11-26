@@ -12,7 +12,6 @@ import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 import win32gui
-import win32con
 import pygetwindow as gw
 
 wCam, hCam = 640, 480
