@@ -5,6 +5,7 @@ import HandTrackingModule as htm
 import ctypes
 import math
 import threading
+from pynput import keyboard, mouse
 from comtypes import CLSCTX_ALL
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 
@@ -24,12 +25,18 @@ volume.SetMasterVolumeLevel(0,None)
 min_vol = -65
 max_vol = 0
 vol_bar= 0
-first_iteration = True
+first_iteration_volume = True
+first_iteration_scroll = True
 vol = 0
 vol_p = 0
 lock = threading.Lock()
 time_condition_met = None
+time_condition_scroll_met = None
 length_2 = 45
+y1_s_p = 0
+y1_s_c = 0
+start_point_scroll = 0
+length_s_activate = 0
 
 
 
@@ -40,16 +47,65 @@ def volume_save():
         time.sleep(2)
         with lock:
             vol_p = vol
+def scroll_difference():
+    global y1_s_p
+    global y1_s_c
+    while True:
+        time.sleep(0.5)
+        with lock:
+            y1_s_p = y1_s_c
               
-    
+
+def scroll(img, lmList):
+    global first_iteration_scroll
+    global y1_s_p
+    global y1_s_c
+    global start_point_scroll
+    global time_condition_scroll_met
+    global length_s_activate
+    mouse_controller = mouse.Controller()
+    if len(lmList) != 0  :
+        x1, y1_s_c = lmList[12][1] , lmList[12][2]
+        x2, y2 = lmList[8][1] , lmList[8][2]
+        x3, y3 = lmList[9][1] , lmList[9][2]
+        length_s = math.hypot(x2-x1,y2-y1_s_c)
+        length_s_activate = math.hypot(x3-x1,y3-y1_s_c)
+        height_dif = y1_s_c - y1_s_p
+
+
+        if length_s < 30 and first_iteration_scroll :
+            start_point_scroll = y1_s_c
+            first_iteration_scroll = False 
+
+        if length_s < 30 and first_iteration_scroll !=True :
+
+            if height_dif > 0 and y1_s_c > start_point_scroll + 55 :
+                mouse_controller.scroll(0, -1)  # Scroll down by one unit
+            if height_dif < 0 and y1_s_c < start_point_scroll + 25 :
+                mouse_controller.scroll(0, +1) 
+
+             
+        if start_point_scroll + 25 < y1_s_c < start_point_scroll + 55  :
+            if time_condition_scroll_met is None:
+                time_condition_scroll_met = time.time()
+                # перевіряє чи виконується умова 2 сек
+            elif time.time() - time_condition_scroll_met >= 2:
+                first_iteration_scroll = True
+                time_condition_scroll_met = None  # збиває таймер
+        else:
+                # якщо умова не виконана збиває таймер
+                time_condition_scroll_met = None 
+             
+
+
 def volume_changing(img, lmList):
     
-    global first_iteration
+    global first_iteration_volume
     global vol
     global vol_p
     global time_condition_met
     global length_2
-    if len(lmList) != 0  :
+    if len(lmList) != 0 :
         
         #print(lmList[4],lmList[8])
         x1, y1 = lmList[4][1] , lmList[4][2]
@@ -64,7 +120,7 @@ def volume_changing(img, lmList):
             k = length_2/length_p
         #print(k)
         length = math.hypot(x2-x1,y2-y1)/k
-        if length < 50 and first_iteration:
+        if length < 50 and first_iteration_volume:
             cv2.circle(img, (x1,y1), 10, (255,0,255), cv2.FILLED )
             cv2.circle(img, (x2,y2), 10, (255,0,255), cv2.FILLED )
             cv2.circle(img, (cx,cy), 5, (255,0,255), cv2.FILLED )
@@ -85,11 +141,11 @@ def volume_changing(img, lmList):
             if vol==0:
                 cv2.circle(img, (x1,y1), 10, (0,0,255), cv2.FILLED )
                 cv2.circle(img, (x2,y2), 10, (0,0,255), cv2.FILLED )
-            first_iteration = False    
+            first_iteration_volume = False    
             
-            return vol , first_iteration 
+            return vol , first_iteration_volume
         
-        if  first_iteration != True :
+        if  first_iteration_volume != True :
             x1, y1 = lmList[4][1] , lmList[4][2]
             x2, y2 = lmList[8][1] , lmList[8][2]
             cx,cy = (x1+x2)//2, (y1+y2)//2
@@ -120,7 +176,7 @@ def volume_changing(img, lmList):
                     time_condition_met = time.time()
                 # перевіряє чи виконується умова 2 сек
                 elif time.time() - time_condition_met >= 2:
-                    first_iteration = True
+                    first_iteration_volume = True
                     time_condition_met = None  # збиває таймер
             else:
                 # якщо умова не виконана збиває таймер
@@ -131,16 +187,20 @@ def volume_changing(img, lmList):
 
   
 volume_save_thread = threading.Thread(target=volume_save, daemon=True)
-volume_save_thread.start()      
+volume_save_thread.start() 
+scroll_difference_thread = threading.Thread(target=scroll_difference, daemon=True)
+scroll_difference_thread.start()           
     
 while True:
     success, img = cap.read()
     img = detector.findHands(img)
     #fps_img = detector.Fps_m(img)
-    lmList = detector.findPosition(img)
-    
+    lmList = detector.findPosition(img) 
     volume_c=volume_changing(img, lmList)
+    scroll(img, lmList)
+    #print(start_point_scroll)
     #print(vol_p)
+    #print(length_s_activate)
     cv2.imshow("img", img)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
